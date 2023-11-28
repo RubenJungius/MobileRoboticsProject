@@ -3,7 +3,7 @@ import cv2.aruco as aruco
 from skimage.filters import threshold_otsu
 import numpy as np
 import matplotlib.pyplot as plt
-from Vision.vision_functions import*
+from Vision.vison_functions import*
 
 ############################ global var ###############################
 
