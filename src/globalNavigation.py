@@ -1,5 +1,6 @@
 import Graph
 import Dijkstra
+import time
 
 def readFile():
     FILE = 'src\\sampleInput.txt'
@@ -22,5 +23,8 @@ target_node = 'G'
 
 readFile() # to be replaced with a function reading the matrix
 graph = Graph.Graph(nodes, init_graph)
+start = time.time()
 previous_nodes, shortest_path = Dijkstra.findPath(graph, start_node)
+end = time.time()
+print("Elapsed time = {}".format(end-start))
 Dijkstra.print_result(previous_nodes, shortest_path, start_node, target_node)
