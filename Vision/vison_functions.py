@@ -1,3 +1,34 @@
+import cv2
+import cv2.aruco as aruco
+from skimage.filters import threshold_otsu
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+
+# ArUco dictionary
+dict_id = cv2.aruco.DICT_6X6_50
+arucoDict = cv2.aruco.getPredefinedDictionary(dict_id)
+arucoParams = cv2.aruco.DetectorParameters()
+
+## A0 paper ratio --> a mesurer pour avoir les distances entre les points tu coco
+res_w = 720
+res_h = 1020
+
+corner_ids = {
+    1:0,
+    2:1,
+    3:2,
+    4:3
+}
+
+# Ids
+thymio_id = 5
+
+
+
+
+
 ############################ function def ###############################
 
 # Given perspective transform, crops the original image
