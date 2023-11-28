@@ -72,25 +72,19 @@ end_point=find_end_point(map)
 if end_point is not None:
     # Convert tuple to integers directly
     end_point_int = (int(end_point[0]), int(end_point[1]))
-    cv2.circle(obstacle_map, end_point_int, 5, (0, 0, 255), -1)
+    # Check if the end_point is within the bounds of the map
+    if 0 <= end_point_int[0] < obstacle_map.shape[1] and 0 <= end_point_int[1] < obstacle_map.shape[0]:
+        cv2.circle(obstacle_map, end_point_int, 5, (0, 0, 255), -1)
+    else:
+        print("End point is outside the visible region of the map.")
+print(end_point)
 
-if thymio_pos is not None:
+if initial_pos is not None:
     # Convert tuple to integers directly
-    thymio_pos_int = (int(thymio_pos[0]), int(thymio_pos[1]))
+    thymio_pos_int = (int(initial_pos[0]), int(initial_pos[1]))
     cv2.circle(obstacle_map, thymio_pos_int, 5, (0, 0, 255), -1)
-
 # Save the image
 cv2.imwrite("Obstacle_map+pos.png", obstacle_map)
-
-
-
-
-
-
-
-
-
-
 
 
 #################################### main vision algo ########################################

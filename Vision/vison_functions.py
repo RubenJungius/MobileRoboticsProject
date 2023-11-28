@@ -151,12 +151,21 @@ def aruco_fill(frame, corners):
     
 def find_end_point(image):
     blue_channel = image[:, :, 2]
-    threshold = 240  # to_tune
-    binary = (blue_channel < threshold).astype(np.uint8) * 255  # Ensure binary is in uint8 format
-    contours, _ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    low_threshold = 110  # to_tune
+    high_threshold = 150 #to_tune
+    blue_part = ((blue_channel > low_threshold) & (blue_channel < high_threshold)).astype(np.uint8) * 255
 
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    bri_channel= hsv_image[:, :, 2]
+    threshold_value = 100  # to_tune
+    _, white_part = cv2.threshold(bri_channel, threshold_value, 255, cv2.THRESH_BINARY)
+
+    binary = cv2.bitwise_xor(blue_part, white_part)
+
+    cv2.imwrite("buffer.png", binary)
+    contours, _ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # Filter contours based on area, you may need to adjust this threshold
-    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 100]
+    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 600]
 
     # Check if any contours are found
     if filtered_contours:
