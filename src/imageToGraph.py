@@ -78,6 +78,45 @@ def find_polygons(img, threshold):
 def distance(a,b):
     return np.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
 
-def find_connections(nodelist, connections): # polygons are enlarged polygons
+def find_connections(nodelist, polygons, maxx, maxy): # polygons are enlarged polygons
+    poly_connections = []
+    connections = []
+    for i in polygons:
+        for j in polygons[i]:
+            try:
+                poly_connections.append([j,j+1,distance(polygons[i][j], polygons[i][j+1])])
+            except:
+                poly_connections.append([j,j-len(polygons[i])+1,distance(polygons[i][j], polygons[i][j-len(polygons[i])+1])])
+    
+    for i in nodelist:
+        for j in nodelist:
+            if i == j: 
+                continue
+            samePoly = False
+            for a in polygons:
+                keyList = list(polygons[a].keys())
+                if i in keyList and j in keyList:
+                    samePoly = True
+                    break
+            if samePoly:
+                continue
+            
+            isConnection = True
+            for k in poly_connections:
+                if intersect(nodelist[i], nodelist[j], nodelist[k[0]], nodelist[k[1]]):
+                    isConnection = False
+                    break
+            if isConnection:
+                connections.append([i,j, distance(nodelist[i], nodelist[j])])
+    for i in poly_connections:
+        if (nodelist[i[0]][0]==0 and nodelist[i[1]][0]==0) or (nodelist[i[0]][0]==maxx and nodelist[i[1]][0]==maxx) or (nodelist[i[0]][1]==0 and nodelist[i[1]][1]==0) or (nodelist[i[0]][1]==maxy and nodelist[i[1]][1]==maxy):
+            continue
+        connections.append(i)
+    return connections
 
-    return 0
+def ccw(A,B,C):
+    return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+
+# Return true if line segments AB and CD intersect
+def intersect(A,B,C,D):
+    return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
