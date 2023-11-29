@@ -33,7 +33,7 @@ def findPath(graph, start_node):
 
     return previous_nodes, shortest_path
 
-def get_shortest(previous_nodes, shortest_path, start_node, target_node):
+def get_shortest(previous_nodes, start_node, target_node):
     path = []
     node = target_node
     while node != start_node:

@@ -73,7 +73,7 @@ def find_polygons(img, threshold):
                 polygons[count][subcount]=j
                 subcount += 1
         count += 1
-    return polygons, count
+    return polygons
 
 def distance(a,b):
     return np.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
@@ -114,9 +114,9 @@ def find_connections(nodelist, polygons, maxx, maxy): # polygons are enlarged po
         connections.append(i)
     return connections
 
+# Functions to find if 2 lines intersect
 def ccw(A,B,C):
     return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
 
-# Return true if line segments AB and CD intersect
 def intersect(A,B,C,D):
     return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
