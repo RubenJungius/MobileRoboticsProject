@@ -36,13 +36,13 @@ def findPath(graph, start_node):
 def print_result(previous_nodes, shortest_path, start_node, target_node):
     path = []
     node = target_node
-
     while node != start_node:
         path.append(node)
         node = previous_nodes[node]
-
+        
     # Add the start node manually
     path.append(start_node)
 
     print("We found the following best path with a length of {}.".format(shortest_path[target_node]))
     print(" -> ".join(reversed(path)))
+    return path

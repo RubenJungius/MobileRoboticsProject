@@ -24,7 +24,7 @@ def detecter_et_classifier_formes(image):
     contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # Initialiser une liste pour stocker les sommets et les classifications
-    sommets_et_classes = []
+    sommets_et_classes = {}
 
     # Parcourir tous les contours
     for contour in contours:
