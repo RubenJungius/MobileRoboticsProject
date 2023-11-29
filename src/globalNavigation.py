@@ -60,7 +60,7 @@ target_node = 1
 image_path = 'src\\sampleImg.jpeg'
 image = cv2.imread(image_path)
 offset = 30
-start = [160,370]
+start = [160,371]
 target = [900,340]
 
 polygons, large_polygons, graph= generateGraph(image, start, start_node, target, target_node, offset)
