@@ -71,6 +71,8 @@ polygons, large_polygons, graph= generateGraph(image, start, start_node, target,
 shortest_path = graph.shortest_path(vg.Point(start[0], start[1]), vg.Point(target[0], target[1]))
 # dilated_image = dilate_img(image, offset)
 
+print(large_polygons)
+
 plt.figure()
 # # plt.imshow(img_grey)
 plt.imshow(image)
@@ -83,13 +85,15 @@ for i in large_polygons:
     for j in large_polygons[i]:
         plt.scatter(large_polygons[i][j][0], large_polygons[i][j][1], s=10, c='blue', marker='o')
 
+count = 2
 for i in large_polygons:
     for j in range(len(large_polygons[i])-1):
-        plt.plot([large_polygons[i][j][0], large_polygons[i][j+1][0]], 
-                 [large_polygons[i][j][1], large_polygons[i][j+1][1]], 'bo-')
-    plt.plot([large_polygons[i][0][0], large_polygons[i][len(large_polygons[i])-1][0]], 
-             [large_polygons[i][0][1], large_polygons[i][len(large_polygons[i])-1][1]], 'bo-')
-
+        plt.plot([large_polygons[i][count][0], large_polygons[i][count+1][0]], 
+                 [large_polygons[i][count][1], large_polygons[i][count+1][1]], 'bo-')
+        count += 1
+    plt.plot([large_polygons[i][count-len(large_polygons[i])+1][0], large_polygons[i][count][0]], 
+             [large_polygons[i][count-len(large_polygons[i])+1][1], large_polygons[i][count][1]], 'bo-')
+    count += 1
 for i in range(len(shortest_path)-1):
     plt.plot([shortest_path[i].x, shortest_path[i+1].x],[shortest_path[i].y, shortest_path[i+1].y], 'ro-')
 

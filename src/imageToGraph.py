@@ -23,8 +23,8 @@ def offset_point(center, a, b, offset, img_shape):
 
 def enlarge_polygons(polygons, offset, img_shape):
     new_polygons = {}
+    count = 2
     for polygon in polygons:
-        count = 0
         new_polygons[polygon] = {}
         nbKeys = len(polygons[polygon].keys())
         
@@ -37,6 +37,7 @@ def enlarge_polygons(polygons, offset, img_shape):
             count += 1
         new_polygons[polygon][count] = offset_point(polygons[polygon][nbKeys-1], polygons[polygon][nbKeys-2], 
                                                          polygons[polygon][0], offset, img_shape)
+        count += 1
     return new_polygons
 
 def find_polygons(img, threshold):
