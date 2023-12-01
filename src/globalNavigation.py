@@ -8,7 +8,15 @@ import numpy as np
 def generateGraph(image, start, start_node, target, target_node, offset):
     
     img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    polygons = imageToGraph.find_polygons(img_grey, threshold=20.0)
+    polygons = imageToGraph.find_polygons(img_grey, threshold=0.0)
+
+ #   plt.figure()
+ #   plt.imshow(image)
+ #   for i in polygons:
+ #       for j in polygons[i]:
+ #           plt.scatter(polygons[i][j][0], polygons[i][j][1], c="red")
+ #   plt.show()
+
     large_polygons = imageToGraph.enlarge_polygons(polygons, offset, image.shape)
     
     nodes_list = {}
@@ -18,7 +26,7 @@ def generateGraph(image, start, start_node, target, target_node, offset):
         for j in large_polygons[i]:
             nodes_list[j]=large_polygons[i][j]
     
-    connections = imageToGraph.find_connections(nodes_list, large_polygons, maxx=image.shape[1], maxy=image.shape[0])
+    connections = imageToGraph.find_connections(nodes_list, large_polygons, maxx=image.shape[1], maxy=image.shape[0], image=image)
     
     ## here build graph with graphclass
     nodes = []
@@ -52,9 +60,9 @@ def run_global(image, start_node, start, target_node, target, offset):
 # TestCode
 start_node = 0
 target_node = 1
-image_path = 'src\\sampleImg.jpeg'
+image_path = 'src\\sampleImg2.jpg'
 image = cv2.imread(image_path)
-offset = 30
+offset = 100
 start = [160,700]
 target = [950,180]
 
