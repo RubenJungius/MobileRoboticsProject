@@ -6,10 +6,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-def generateGraph(image, start, start_node, target, target_node, offset):
+def generateGraph(image, start, start_node, target, target_node, offset, threshold):
     
     #img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    polygons = find_polygons(image, threshold=20.0)
+    polygons = find_polygons(image, threshold)
     large_polygons = enlarge_polygons(polygons, offset, image.shape)
     
     nodes_list = {}
@@ -44,8 +44,8 @@ def draw_graph(image, connections, nodelist, path):
         plt.plot([nodelist[path[i]][0], nodelist[path[i+1]][0]],[nodelist[path[i]][1], nodelist[path[i+1]][1]], 'bo-')
     plt.show()
 
-def run_global(image, start_node, start, target_node, target, offset):
-    graph, connections, nodelist= generateGraph(image, start, start_node, target, target_node, offset)
+def run_global(image, start_node, start, target_node, target, offset, threshold):
+    graph, connections, nodelist= generateGraph(image, start, start_node, target, target_node, offset, threshold)
     previous_node, shortest_path = findPath(graph, start_node)
     path = get_shortest(previous_node, start_node, target_node)
     return path, connections, nodelist

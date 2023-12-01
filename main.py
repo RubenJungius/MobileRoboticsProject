@@ -4,7 +4,6 @@ from skimage.filters import threshold_otsu
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-import pyvisgraph as vg
 
 
 from timeit import default_timer as timer
@@ -149,7 +148,7 @@ while True:
 
     if do_path == 1 :
 
-        path, connections, nodelist = run_global(obstacle_map, start_node, position, target_node, target, offset)
+        path, connections, nodelist = run_global(obstacle_map, start_node, position, target_node, target, offset, threshold=20)
         positions_triees = {indice: nodelist[indice] for indice in path}
         pathpoints = np.array(list(positions_triees.values()))[::-1]
         draw_graph(obstacle_map, connections, nodelist, path)
