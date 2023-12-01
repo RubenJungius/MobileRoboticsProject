@@ -3,7 +3,21 @@ import cv2.aruco as aruco
 from skimage.filters import threshold_otsu
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
+import pyvisgraph as vg
+
+
+from timeit import default_timer as timer
+from tdmclient import ClientAsync, aw
+from src.FollowPath import*
+from src.Obstacle_avoid import*
 from Vision.vison_functions import*
+from src.globalNavigation import*
+
+
+
+
+
 
 ############################ global var ###############################
 
@@ -31,7 +45,7 @@ thymio_id = 5
 ############################ Code ###############################
 
 # Open Camera
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 if not cam.isOpened():
     print("Error: Unable to open the camera.")
 else:
@@ -51,14 +65,14 @@ cv2.imwrite("Global_map.png", map)
 print("\nFind Thymio")
 thymio_pos = None
 initial_pos= None
-
+initial_teta = None
 #iterate over the few first frame to look for thymio (id=5)
-while initial_pos is None:
+while initial_pos is None and initial_teta is None:
     ret, frame = cam.read()
     dst = crop_labyrinth(frame, M)
     dst_gray = cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY)
     detected = cv2.aruco.detectMarkers(dst_gray, arucoDict, parameters=arucoParams)
-    (thymio_corners, initial_pos, _) = find_thymio(detected)
+    (thymio_corners, initial_pos, initial_teta) = find_thymio(detected)
 
 #fill the thymio aruco with white
 aruco_fill(map, thymio_corners)
@@ -89,6 +103,27 @@ cv2.imwrite("Obstacle_map+pos.png", obstacle_map)
 
 #################################### main vision algo ########################################
 
+# Thymio connexion
+client = ClientAsync()
+node = aw(client.wait_for_node())
+aw(node.lock())
+aw(client.sleep(2))   
+print("\nThymio connected success")
+
+# var declarations
+start_node = 0
+target_node = 1
+offset = 70
+target =  np.array([900,400])
+aw(node.set_variables(Msg_motors(0, 0)))
+last_position = initial_pos
+last_teta = initial_teta
+
+#flags
+path_has_been_done = 0
+do_path = 1 
+
+
 while True:
     ret, frame = cam.read()
     dst = crop_labyrinth(frame, M)
@@ -100,8 +135,64 @@ while True:
     cv2.imshow('Frame with Detected Markers and Thymio', dst)
 
 
+
+    ###### PATH PLANNING ######
+    # compute position 
+    c, position, teta = thymio_pos
+    if position is None : 
+        position = last_position
+    last_position = position 
+    if teta is None : 
+        teta = last_teta
+    last_teta = teta
+
+
+    if do_path == 1 :
+
+        path, connections, nodelist = run_global(obstacle_map, start_node, position, target_node, target, offset)
+        positions_triees = {indice: nodelist[indice] for indice in path}
+        pathpoints = np.array(list(positions_triees.values()))[::-1]
+        draw_graph(obstacle_map, connections, nodelist, path)
+        print(pathpoints)
+
+        do_path = 0
+        path_has_been_done = 1
+        
+
+    ###### MATION CONTROL ######
+
+    # Bloc to compute the motors speed from obstacles
+    aw(node.wait_for_variables({"prox.horizontal"}))
+    prox_meas = node.v.prox.horizontal
+    motorL_obstacle, motorR_obstacle = LocalAvoidance(prox_meas)
+
+    # Bloc to compute the motors speed from path foloowing 
+    motorL_path, motorR_path, has_finished, carrot = follow_path(position, teta, pathpoints, path_has_been_done)
+    path_has_been_done = 0
+    # Compute the final motorL value and finale motorR value 
+    motorL = motorL_obstacle + motorL_path
+    motorR = motorR_obstacle + motorR_path
+
+    # Limit the motor speed to 500 or -500
+    motorL = min(max(motorL, -500), 500)
+    motorR = min(max(motorR, -500), 500)
+
+    aw(node.set_variables(Msg_motors(motorL, motorR)))
+    if has_finished == 1:
+        aw(node.set_variables(Msg_motors(0, 0)))
+        aw(node.unlock())
+        break
+
+
+
+
+
+
+
     # Break the loop if 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
+        aw(node.set_variables(Msg_motors(0, 0)))
+        aw(node.unlock())
         break
 
 

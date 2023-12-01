@@ -75,9 +75,11 @@ def find_thymio(detected):
   # c[2]        BOTTOM LEFT
   # c[3]        TOP LEFT
   # Compute orientation
-  top_middle = (c[0]+c[3])/2
-  dir = top_middle - center
-  angle = np.arctan2(dir[0], dir[1])
+  # blacks squares have to be to te front of the thymio
+  v1 = c[1] - c[0]
+  v2 = c[2] - c[3]
+  dir = (v1 + v2)/2
+  angle = np.arctan2(dir[1], dir[0])
   
   return (c, center, angle)
 
@@ -92,8 +94,8 @@ def draw_thymio(output_image, thymio_pos):
         # Draw arrow indicating direction
         length = 30
         arrow_tip = (
-            int(center[0] + length * np.sin(angle)),
-            int(center[1] - length * np.cos(angle))
+            int(center[0] + length * np.cos(angle)),
+            int(center[1] + length * np.sin(angle))
         )
         cv2.arrowedLine(output_image, tuple(center.astype(int)), arrow_tip, (0, 0, 255), 2)
 
@@ -107,19 +109,43 @@ def binarisation(im):
 
 
 def find_obstacle(image):
-    binary = binarisation(image)
-    gray = cv2.cvtColor(binary.astype(np.uint8), cv2.COLOR_BGR2GRAY)
-    contours, _ = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    obstacle_map = np.zeros_like(gray, dtype=np.uint8)
+    #binary = binarisation(image)
+    #gray = cv2.cvtColor(binary.astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    #contours, _ = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #obstacle_map = np.zeros_like(gray, dtype=np.uint8)
+    cv2.imwrite("ch1.png", image)
+    gray_im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    cv2.imwrite("ch15.png", gray_im)
+    #threshold = cv2.THRESH_BINARY + cv2.THRESH_OTSU
+    threshold = 100
+    threshold_value, obstacle_map = cv2.threshold(gray_im, threshold, 255, cv2.THRESH_BINARY)
+    #gray = cv2.cvtColor(binary.astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    contours, _ = cv2.findContours(obstacle_map, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    cv2.imwrite("ch2.png", obstacle_map)
 
     for cnt in contours:
         # Calculate area and remove small elements
         area = cv2.contourArea(cnt)
-
-        if area > 2000:
+        if area < 20000:
             # Draw the filled contour on the obstacle map
             cv2.drawContours(obstacle_map, [cnt], -1, 255, thickness=cv2.FILLED)
 
+
+    cv2.imwrite("ch3.png", obstacle_map)
+    height, width = obstacle_map.shape[:2]
+
+    # size of the black spot corner 
+    width_corners = 60
+
+    # #erase tags on the corners
+    obstacle_map[:width_corners, :width_corners] = 255  # Coin supérieur gauche
+    obstacle_map[:width_corners, width - width_corners:] = 255  # Coin supérieur droit
+    obstacle_map[height - width_corners:, :width_corners] = 255  # Coin inférieur gauche
+    obstacle_map[height - width_corners:, width - width_corners:] = 255  # Coin inférieur droit
+
+    obstacle_map = cv2.bitwise_not(obstacle_map)
+    cv2.imwrite("ch4.png", obstacle_map)
     return obstacle_map
 
 

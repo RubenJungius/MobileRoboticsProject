@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import pyvisgraph as vg
 
 
-def detecter_et_classifier_formes(image):
+def detecter_et_classifier_formes(img):
     # Charger l'image en niveaux de gris
     
-    img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     #Appliquer un aggrandisseur de formes 
 
@@ -122,14 +122,14 @@ def convertir_chemin_en_array(chemin_plus_court):
     return pathpoints
 
 
-
+'''
 
 # Exemple d'utilisation avec une image
-image_path = 'visi_img.png'
+image_path = 'ch5.png'
 image = cv2.imread(image_path)
 
 kernel = np.ones((5, 5), np.uint8)
-image = cv2.erode(image, kernel, iterations=3)
+image = cv2.erode(image, kernel, iterations=15)
 
 
 sommets_et_classes = detecter_et_classifier_formes(image)
@@ -142,7 +142,8 @@ print(sommets_et_classes)
 polys = creer_polys(sommets_et_classes)
 graph = vg.VisGraph()
 graph.build(polys)
-shortest = graph.shortest_path(vg.Point(66, 107), vg.Point(217, 523))
+print('gj')
+shortest = graph.shortest_path(vg.Point(123, 550), vg.Point(800, 160))
 print(shortest)
 path = convertir_chemin_en_array(shortest)
 print(path)
@@ -151,3 +152,4 @@ print(path)
 
 visualiser_chemin_plus_court(image, sommets_et_classes, shortest)
 
+'''

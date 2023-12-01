@@ -7,23 +7,10 @@ from tdmclient import ClientAsync, aw
 
 # a tuner : d_projection qui definit le regard du robot), KPv et KPteta
 
-'''
-has_finished = 0
-KPv = 12 
-KPteta = 10
-path_has_been_done = 1 
-margin = 1 # marge de protection autour de la ligne 
-d_projection = 2
 
-
+KPv = 2
+KPteta = 70
 segment_idx = 0
-limit_distance = 1
-'''
-
-KPv = 12 
-KPteta = 10
-segment_idx = 0
-has_finished = 0
 
 def distance(point1, point2):
     
@@ -38,22 +25,21 @@ def vector_compute(point1, point2):
 
 def go_to_carrot(_position, _carrot, _teta, _Bnormal, _margin) : 
 
+    motorL = 0
+    motorR = 0
     d = distance(_position, _carrot)
-    motorL = d * KPv
-    motorR = d * KPv
+    motorL = 70
+    motorR = 70
 
     ## version pas de ralentissement ; 
-    # d = distance(_position, _projection)
+    #d = distance(_position, _projection)
     #motorL = d * KPv
     #motorR = d * KPv
-
+    vector_carrot = vector_compute(_position, _carrot)
     if d > _margin :
-        phi = _teta - math.atan2(_Bnormal[1],_Bnormal[0])
+        phi =  math.atan2(vector_carrot[1],vector_carrot[0]) - _teta
         phi = adjust_angle(phi)
-        #print(_teta)
-        #print('angle Bnormal : ')
-        #print(math.atan2(_Bnormal[1],_Bnormal[0]))
-        #print(phi)
+        #phi = - phi # Inversion thanks to the fact that computation are made in an other base that images
         motorL = motorL + phi * KPteta
         motorR = motorR - phi * KPteta
 
@@ -73,22 +59,23 @@ def adjust_angle(_angle):
 
 def follow_path(position, teta, path, path_has_been_done) :
 
+
     projection = np.array([0,0])
     carrot = np.array([0,0])
+    motorL = 0
+    motorR = 0
+    global segment_idx
+    margin = 5 # marge de protection autour de la ligne 
+    d_projection = 30
 
+    has_finished = 0
+    limit_distance = 40
     
-    margin = 1 # marge de protection autour de la ligne 
-    d_projection = 2
-
-    global has_finished
-    global segment_idx 
-    limit_distance = 1
-
 
 
     # Ckech if the path planning just came to be done 
     if path_has_been_done == 1 :
-        segment_idx = 0 
+        segment_idx = 0
         path_has_been_done = 0
 
     # Check if the position has reached the end segment point
@@ -97,13 +84,14 @@ def follow_path(position, teta, path, path_has_been_done) :
         print('go changer de segemnt')
         if segment_idx == len(path)-1 :
             has_finished = 1
+            print('cest finit')
 
-    
+    #print(position, path[segment_idx +1])
 
     if has_finished == 1:
         motorL = 0
         motorR = 0
-        return motorL, motorR
+        return motorL, motorR, has_finished, carrot
     else : 
         # project mon point sur le segment que je suis 
         projection = position + np.array([d_projection*math.cos(teta), d_projection*math.sin(teta)])
@@ -113,7 +101,10 @@ def follow_path(position, teta, path, path_has_been_done) :
         #print(B)
         #print('Bnormal =')
         #print(Bnormal)
-        sp = np.dot(A,Bnormal)
+        sp = abs(np.dot(A,Bnormal))
+        maxsp = distance(path[segment_idx],path[segment_idx+1])
+        if sp >maxsp : 
+            sp = maxsp
         #print(sp)
         carrot = path[segment_idx] + Bnormal * abs(sp)
         #print(carrot)
@@ -122,6 +113,6 @@ def follow_path(position, teta, path, path_has_been_done) :
         #print('angle = ' + str(phi)+ str(phi1))
         motorL, motorR = go_to_carrot(position, carrot, teta, Bnormal, margin)
         #print('motorL = ' + str(motorL)+ 'motorR = ' + str(motorR))
-        return motorL, motorR
+        return motorL, motorR, has_finished, carrot
 
 

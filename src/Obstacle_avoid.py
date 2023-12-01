@@ -13,15 +13,15 @@ from tdmclient import ClientAsync, aw
 #faire une fonction qui fait la local avoidance ! 
 
 def LocalAvoidance(prox) : 
-
-
-    NN = np.array([[2, 3, -4, -3, -2],[-2, -3, -4, 3, 2]])
+    
+    NNW = np.array([[2, 3, -4, -3, -2],[-2, -3, -4, 3, 2]])
     threshold = 500
     Gain = 0.01
     obstacle_detected = False
+    prox_for = np.zeros(5)
 
     for i in range(5):
-        prox[i] = prox[i]
+        prox_for[i] = prox[i]
         if(prox[i] > threshold) :
             obstacle_detected = True
 
@@ -29,7 +29,7 @@ def LocalAvoidance(prox) :
         return 0, 0
 
     elif obstacle_detected :
-        Y = np.dot(NN, prox) * Gain
+        Y = np.dot(NNW, prox_for) * Gain
         motor_L = Y[0] 
         motor_R = Y[1]
         return motor_L, motor_R
