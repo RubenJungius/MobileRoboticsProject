@@ -61,18 +61,14 @@ def find_polygons(img, threshold, area_threshold):
     colors = ['red', 'green', 'blue', 'yellow']    
     # Parcourir tous les contours
     for contour in contours:
-        area = cv2.contourArea(contour)
+        area = cv2.contourArea(cv2.convexHull(contour))
         if area < area_threshold:
             continue
         # Approximer le contour par une forme polygonale
-        epsilon = 0.04 * cv2.arcLength(contour, True)
+        epsilon = 0.01 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
         hull = cv2.convexHull(approx)
         
-
-        for i in hull:
-            for j in i:
-                plt.scatter(j[0], j[1], c=colors[count])
 
         polygons[count]={}
         subcount=0
@@ -86,6 +82,7 @@ def find_polygons(img, threshold, area_threshold):
                             skip=True
                     if skip:
                         continue  
+                plt.scatter(j[0], j[1], c=colors[count])
                 polygons[count][subcount]=j
                 subcount += 1
         count += 1
@@ -113,6 +110,15 @@ def find_connections(nodelist, polygons, maxx, maxy, image): # polygons are enla
             for a in polygons:
                 keyList = list(polygons[a].keys())
                 if i in keyList and j in keyList:
+                    '''
+                    print(nodelist[i], nodelist[j], nodelist[k[0]], nodelist[k[1]])
+                    plt.clf()
+                    plt.imshow(image)
+                    plt.plot([nodelist[i][0], nodelist[j][0]], [nodelist[i][1], nodelist[j][1]], color="b")
+                    plt.show(block=False)
+                    plt.pause(0.001)
+                    input("Same poly, Press Enter to continue...")
+                    '''
                     samePoly = True
                     break
             if samePoly:
@@ -131,7 +137,7 @@ def find_connections(nodelist, polygons, maxx, maxy, image): # polygons are enla
                     plt.pause(0.001)
                     input("Press Enter to continue...")
                     '''
-
+                    
                     isConnection = False
                     break
             if isConnection:

@@ -61,11 +61,11 @@ def run_global(image, start_node, start, target_node, target, offset):
 # TestCode
 start_node = 0
 target_node = 1
-image_path = 'src\\sampleImg3.jpeg'
+image_path = 'src\\sampleImg.jpeg'
 image = cv2.imread(image_path)
-offset = 100
+offset = 50
 start = [160,700]
-target = [950,180]
+target = [960,130]
 
 path, connections, nodelist = run_global(image, start_node, start, target_node, target, offset)
 draw_graph(image, connections, nodelist, path)
