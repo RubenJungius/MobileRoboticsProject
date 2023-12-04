@@ -8,7 +8,7 @@ import numpy as np
 def generateGraph(image, start, start_node, target, target_node, offset):
     
     img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    polygons = imageToGraph.find_polygons(img_grey, threshold=0.0)
+    polygons = imageToGraph.find_polygons(img_grey, threshold=20.0, area_threshold=40)
 
  #   plt.figure()
  #   plt.imshow(image)
@@ -16,6 +16,7 @@ def generateGraph(image, start, start_node, target, target_node, offset):
  #       for j in polygons[i]:
  #           plt.scatter(polygons[i][j][0], polygons[i][j][1], c="red")
  #   plt.show()
+    print(polygons)
 
     large_polygons = imageToGraph.enlarge_polygons(polygons, offset, image.shape)
     
@@ -60,7 +61,7 @@ def run_global(image, start_node, start, target_node, target, offset):
 # TestCode
 start_node = 0
 target_node = 1
-image_path = 'src\\sampleImg2.jpg'
+image_path = 'src\\sampleImg3.jpeg'
 image = cv2.imread(image_path)
 offset = 100
 start = [160,700]

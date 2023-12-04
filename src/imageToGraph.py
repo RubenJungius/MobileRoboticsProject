@@ -44,7 +44,7 @@ def enlarge_polygons(polygons, offset, img_shape):
         count += 1
     return new_polygons
 
-def find_polygons(img, threshold):
+def find_polygons(img, threshold, area_threshold):
     # Appliquer un flou pour réduire le bruit et détecter les contours
     img = cv2.GaussianBlur(img, (5, 5), 0)
     img = cv2.Canny(img, 50, 150)
@@ -56,13 +56,24 @@ def find_polygons(img, threshold):
     polygons = {}
     count = 0
     
+    plt.figure()
+    plt.imshow(img)
+    colors = ['red', 'green', 'blue', 'yellow']    
     # Parcourir tous les contours
     for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < area_threshold:
+            continue
         # Approximer le contour par une forme polygonale
         epsilon = 0.04 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
         hull = cv2.convexHull(approx)
         
+
+        for i in hull:
+            for j in i:
+                plt.scatter(j[0], j[1], c=colors[count])
+
         polygons[count]={}
         subcount=0
         for i in hull:
@@ -70,7 +81,7 @@ def find_polygons(img, threshold):
                 if subcount > 0:
                     skip = False
                     for k in range(subcount):
-                        break
+                        # break
                         if length(vector(j, polygons[count][k]))<threshold:
                             skip=True
                     if skip:
@@ -78,6 +89,7 @@ def find_polygons(img, threshold):
                 polygons[count][subcount]=j
                 subcount += 1
         count += 1
+    plt.show()
     return polygons
 
 def distance(a,b):
