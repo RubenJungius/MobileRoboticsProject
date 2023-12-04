@@ -59,7 +59,7 @@ def find_polygons(img, threshold, area_threshold):
             continue
         
         # Approximer le contour par une forme polygonale
-        epsilon = 0.04 * cv2.arcLength(contour, True)
+        epsilon = 0.01 * cv2.arcLength(contour, True)
         approx = cv2.approxPolyDP(contour, epsilon, True)
         hull = cv2.convexHull(approx)
         
