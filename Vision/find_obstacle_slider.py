@@ -22,7 +22,10 @@ def update_parameters_red(red_threshold_slider, image_capture):
 
 def process_image_red(image, red_threshold):
     red_channel = image[:, :, 0]
-    _, binary = cv2.threshold(red_channel, red_threshold, 255, cv2.THRESH_BINARY)
+    # Set pixels below the threshold to 0
+    red_channel[red_channel < red_threshold] = 0
+    
+    _, binary = cv2.threshold(red_channel, 1, 255, cv2.THRESH_BINARY) 
     return binary
 
 def red_binarisation(image_capture):
@@ -49,7 +52,7 @@ def red_binarisation(image_capture):
     root.mainloop()
 
 # Open a connection to the webcam
-image = cv2.VideoCapture(1)
+image = cv2.VideoCapture(0)
 red_binarisation(image)
 ############################ blue ###############################
 
@@ -97,5 +100,5 @@ def blue_binarisation(image_capture):
     # Start the Tkinter main loop
     root.mainloop()
 
-image = cv2.VideoCapture(1)
+image = cv2.VideoCapture(0)
 blue_binarisation(image)

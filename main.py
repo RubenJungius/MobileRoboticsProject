@@ -4,7 +4,7 @@ from skimage.filters import threshold_otsu
 import numpy as np
 import matplotlib.pyplot as plt
 from Vision.vison_functions import*
-
+#from Vision.find_obstacle_slider import*
 ############################ global var ###############################
 
 
@@ -12,10 +12,6 @@ from Vision.vison_functions import*
 dict_id = cv2.aruco.DICT_6X6_50
 arucoDict = cv2.aruco.getPredefinedDictionary(dict_id)
 arucoParams = cv2.aruco.DetectorParameters()
-
-## A0 paper ratio --> a mesurer pour avoir les distances entre les points tu coco
-res_w = 720
-res_h = 1020
 
 corner_ids = {
     1:0,
@@ -42,7 +38,7 @@ cam.set(cv2.CAP_PROP_FRAME_HEIGHT, res_w)
 
 #search for the 4 corner and the right transformation M
 M=corners_calibration(cam)
-
+#create_sliders()
 print("\nMap computing")
 ret, frame = cam.read()
 map = crop_labyrinth(frame, M)
