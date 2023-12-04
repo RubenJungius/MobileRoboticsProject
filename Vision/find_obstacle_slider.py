@@ -14,18 +14,18 @@ def update_parameters_red(red_threshold_slider, image_capture):
     red_threshold = red_threshold_slider.get()
 
     # Capture a frame from the webcam
-    _, frame = image_capture.read()
+    #_, frame = image_capture.read()
+    frame=image_capture
 
     # Apply the updated parameters and display the updated image
     result_image = process_image_red(frame, red_threshold)
     cv2.imshow("Updated Image", result_image)
+    cv2.imwrite("Obstacle_map.png",result_image)
 
 def process_image_red(image, red_threshold):
-    red_channel = image[:, :, 0]
-    # Set pixels below the threshold to 0
+    red_channel = image[:, :, 0].copy()  # Create a copy of the red channel
     red_channel[red_channel < red_threshold] = 0
-    
-    _, binary = cv2.threshold(red_channel, 1, 255, cv2.THRESH_BINARY) 
+    _, binary = cv2.threshold(red_channel, 1, 255, cv2.THRESH_BINARY)
     return binary
 
 def red_binarisation(image_capture):
@@ -45,15 +45,12 @@ def red_binarisation(image_capture):
     done_button.pack()
 
     # Display the initial image
-    _, initial_frame = image_capture.read()
-    cv2.imshow("Original Image", initial_frame)
+    #_, initial_frame = image_capture.read()
+    cv2.imshow("Original Image", image_capture)
 
     # Start the Tkinter main loop
     root.mainloop()
 
-# Open a connection to the webcam
-image = cv2.VideoCapture(0)
-red_binarisation(image)
 ############################ blue ###############################
 
 def update_parameters_blue(low_threshold_slider, high_threshold_slider, image_capture):
@@ -62,11 +59,12 @@ def update_parameters_blue(low_threshold_slider, high_threshold_slider, image_ca
     high_threshold = high_threshold_slider.get()
 
     # Capture a frame from the webcam
-    _, frame = image_capture.read()
+    frame = image_capture
 
     # Apply the updated parameters and display the updated image
     result_image = process_image_blue(frame, low_threshold, high_threshold)
     cv2.imshow("Updated Image", result_image)
+    cv2.imwrite("end_point.png",result_image)
 
 def process_image_blue(image, low_threshold, high_threshold):
     blue_channel = image[:, :, 2]
@@ -94,11 +92,8 @@ def blue_binarisation(image_capture):
     done_button.pack()
 
     # Display the initial image
-    _, initial_frame = image_capture.read()
-    cv2.imshow("Original Image", initial_frame)
+    #_, initial_frame = image_capture.read()
+    cv2.imshow("Original Image", image_capture)
 
     # Start the Tkinter main loop
     root.mainloop()
-
-image = cv2.VideoCapture(0)
-blue_binarisation(image)
