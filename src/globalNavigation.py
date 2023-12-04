@@ -6,10 +6,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-def generateGraph(image, start, start_node, target, target_node, offset, threshold):
+def generateGraph(image, start, start_node, target, target_node, offset, threshold, area_threshold):
     
     #img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    polygons = find_polygons(image, threshold)
+    polygons = find_polygons(image, threshold, area_threshold)
     large_polygons = enlarge_polygons(polygons, offset, image.shape)
     
     nodes_list = {}

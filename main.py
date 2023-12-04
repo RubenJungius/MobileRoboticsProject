@@ -117,6 +117,8 @@ target =  np.array([900,400])
 aw(node.set_variables(Msg_motors(0, 0)))
 last_position = initial_pos
 last_teta = initial_teta
+point_threshold = 20
+area_threshold = 40
 
 #flags
 path_has_been_done = 0
@@ -148,7 +150,7 @@ while True:
 
     if do_path == 1 :
 
-        path, connections, nodelist = run_global(obstacle_map, start_node, position, target_node, target, offset, threshold=20)
+        path, connections, nodelist = run_global(obstacle_map, start_node, position, target_node, target, offset, point_threshold, area_threshold)
         positions_triees = {indice: nodelist[indice] for indice in path}
         pathpoints = np.array(list(positions_triees.values()))[::-1]
         draw_graph(obstacle_map, connections, nodelist, path)
