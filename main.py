@@ -4,9 +4,9 @@ from skimage.filters import threshold_otsu
 import numpy as np
 import matplotlib.pyplot as plt
 from Vision.vison_functions import*
+import time
 #from Vision.find_obstacle_slider import*
 ############################ global var ###############################
-
 
 # ArUco dictionary
 dict_id = cv2.aruco.DICT_6X6_50
@@ -23,7 +23,6 @@ corner_ids = {
 # Ids
 thymio_id = 5
 
-
 ############################ Code ###############################
 
 # Open Camera
@@ -38,8 +37,11 @@ cam.set(cv2.CAP_PROP_FRAME_HEIGHT, res_w)
 
 #search for the 4 corner and the right transformation M
 M=corners_calibration(cam)
-#create_sliders()
+
 print("\nMap computing")
+
+time.sleep(2)
+
 ret, frame = cam.read()
 map = crop_labyrinth(frame, M)
 cv2.imwrite("Global_map.png", map)
@@ -61,7 +63,7 @@ aruco_fill(map, thymio_corners)
 
 #find the obstacle by thresholding
 obstacle_map = find_obstacle(map)
-cv2.imwrite("Obstacle_map.png",obstacle_map)
+cv2.imwrite("Obstacle_map_filtered.png",obstacle_map)
 
 end_point=find_end_point(map)
 # Check if end_point and thymio_pos are not None before drawing
