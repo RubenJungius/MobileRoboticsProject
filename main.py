@@ -8,14 +8,15 @@ import time
 import copy
 from timeit import default_timer as timer
 from tdmclient import ClientAsync, aw
-from src.FollowPath import*
-from src.Obstacle_avoid import*
+from MotionControl.FollowPath import*
+from LocalNavig.Obstacle_avoid import*
 
 from Vision.vison_functions import*
 
 from src.globalNavigation import*
 
-from src.kalman import kalman
+from Filter.kalman import kalman
+
 ## A0 paper ratio --> a mesurer pour avoir les distances entre les points tu coco  
 res_h = 1020
 res_w=720

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import tkinter as tk
 from tkinter import Scale, Button
-
+'''
 def update_parameters():
     # Get the current values from the sliders
     low_threshold = low_threshold_slider.get()
@@ -26,6 +26,7 @@ def process_image(image, low_threshold, high_threshold, threshold_value):
 def tuning_done():
     # Close the current window
     root.destroy()
+
 
 # Create the main window
 root = tk.Tk()
@@ -58,3 +59,4 @@ cv2.imshow("Original Image", img)
 
 # Start the Tkinter main loop
 root.mainloop()
+'''
