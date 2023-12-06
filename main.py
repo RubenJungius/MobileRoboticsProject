@@ -19,7 +19,7 @@ from Filter.kalman import kalman
 
 ## A0 paper ratio --> a mesurer pour avoir les distances entre les points tu coco  
 res_h = 1020
-res_w=720
+res_w = 720
 
 map_length = 780     # mm
 pixel_to_mm = map_length/1020
@@ -104,18 +104,16 @@ aw(node.lock())
 aw(client.sleep(2))   
 print("\nThymio connected success")
 
-# var declarations
+# Path planning var init
 start_node = 0
 target_node = 1
-offset = 123     # elargissement des obstacles
-# target =  np.array([100,100])
-target = end_point
-aw(node.set_variables(Msg_motors(0, 0)))
-last_position = initial_pos     # in case of error take the last position, only at init.
-last_teta = initial_teta
+offset = 123        # unlarg obstacles
+target = end_point  # define the target
 
-#point_threshold = 20
-#area_threshold = 40
+# Motion Control var init
+motorL=0
+motorR=0
+aw(node.set_variables(Msg_motors(motorL, motorR)))
 
 #flags
 path_has_been_done = 0
@@ -132,8 +130,7 @@ print("initial thymio pos : ", thymio_pos)
 kalman_class = kalman(map_length_mm=map_length,mean_init=np.array([thymio_pos[1][0],thymio_pos[1][1], thymio_pos[2]])   )  #create an instance object for the class kalman()
 # kalman_class.mean_init=[thymio_pos[1], thymio_pos[2]]    #mean is a vector for x,y,theta
 
-motorL=0
-motorR=0
+
 
 curr_time=time.time()       # to not have the first dt very high
 
@@ -148,19 +145,40 @@ theta_predict_evol = []
 start_time = time.time()
 
 while True:
+
+    
+
+    ###### PATH PLANNING ######
+
+    if do_path == 1 :
+        
+        path, connections, nodelist = run_global( obstacle_map, start_node, initial_pos, target_node, target, offset) #, point_threshold, area_threshold)
+        positions_triees = {indice: nodelist[indice] for indice in path}        # nodelist gives all the nodes (directory of nodes)
+        pathpoints = np.array(list(positions_triees.values()))[::-1]            # get a list of points coordinates from directorie 'node' and 'path' indexs
+        cv2.destroyAllWindows()
+        draw_graph(obstacle_map, connections, nodelist, path)
+        print(pathpoints)
+
+        do_path = 0
+        path_has_been_done = 1
+
+
+
+
+
+    ###### VISION #######
+    
     ret, frame = cam.read()
     roi = get_ROI(frame, M)
     roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #gray transform for aruco detection
     detected = cv2.aruco.detectMarkers(roi_gray, arucoDict, parameters=arucoParams)
     thymio_pos = find_thymio(detected)
-    # compute position 
-    c, position, teta = thymio_pos          # pose of robot. c is position of edges
-    # if position is None : 
-    #     position = last_position
-    # last_position = position 
-    # if teta is None : 
-    #     teta = last_teta
-    # last_teta = teta
+    # get position of the robot and his orientation teta 
+    c, position, teta = thymio_pos        
+   
+
+
+    ###### KALMAN FILTER ######
     print("--------------------------------------")
     # print("thymio_pos_camera: ", thymio_pos)
     if (position is not None) and (teta is not None):
@@ -197,33 +215,8 @@ while True:
     thymio_pos = (thymio_pos[0], np.array([kalman_pose[0],kalman_pose[1]]), kalman_pose[2])     
     # print("final thymio pos: ", thymio_pos)
     # print("thymio_pos2: ", thymio_pos)
-    #######
-    draw_thymio(roi, thymio_pos)                                                                            # draw
-    # Display the frame with detected markers and Thymio
-    cv2.imshow('Frame with Detected Markers and Thymio', roi)
-
-    ###### PATH PLANNING ######
-    # # compute position 
-    # c, position, teta = thymio_pos          # pose of robot. c is position of edges
-    # if position is None : 
-    #     position = last_position
-    # last_position = position 
-    # if teta is None : 
-    #     teta = last_teta
-    # last_teta = teta
 
 
-    if do_path == 1 :
-        
-        path, connections, nodelist = run_global( obstacle_map, start_node, position, target_node, target, offset) #, point_threshold, area_threshold)
-        positions_triees = {indice: nodelist[indice] for indice in path}        # nodelist gives all the nodes (directory of nodes)
-        pathpoints = np.array(list(positions_triees.values()))[::-1]            # get a list of points coordinates from directorie 'node' and 'path' indexs
-        cv2.destroyAllWindows()
-        draw_graph(obstacle_map, connections, nodelist, path)
-        print(pathpoints)
-
-        do_path = 0
-        path_has_been_done = 1
         
 
     ###### MATION CONTROL ######
@@ -237,22 +230,38 @@ while True:
     motorL_path, motorR_path, has_finished, carrot = follow_path(thymio_pos[1], thymio_pos[2], pathpoints, path_has_been_done)
     path_has_been_done = 0
     # Compute the final motorL value and finale motorR value 
-    motorL = motorL_obstacle + motorL_path                      # * 1.01
-    motorR = motorR_obstacle + motorR_path                      # * 0.98
+    motorL = motorL_obstacle + motorL_path                      
+    motorR = motorR_obstacle + motorR_path                      
 
     # Limit the motor speed to 500 or -500
     motorL = min(max(motorL, -500), 500)
     motorR = min(max(motorR, -500), 500)
 
-    aw(node.set_variables(Msg_motors(motorL, motorR)))
+    # Send speeds to Thymio. 1.01 and 0.98 are coefficients because of natural deiviation of the Thymio
+    aw(node.set_variables(Msg_motors(motorL *1.01, motorR*0.98)))
     if has_finished == 1:
         aw(node.set_variables(Msg_motors(0, 0)))
         aw(node.unlock())
         break
 
+
+    ####### SHOW MAP #####
+    # Draw path 
+    for point in pathpoints:
+        cv2.circle(roi, tuple(np.array(point).astype(int)), 5, (0, 255, 0), -1)
+    #draw carrot
+    cv2.circle(roi, tuple(np.array(carrot).astype(int)), 5, (255, 0, 0), -1)
+    # Draw Thymio
+    draw_thymio(roi, thymio_pos)                                                                           
+    # Display the frame with detected markers and Thymio
+    cv2.imshow('Frame with Detected Markers and Thymio', roi)
+
+
+
+
     # Break the loop if 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        aw(node.set_variables(Msg_motors(0, 0)))
+        aw(node.set_variables(Msg_motors(0, 0)))    # release the Thymio
         aw(node.unlock())
         break
 
@@ -346,9 +355,6 @@ plt.savefig('kalman_camera_evolution.png', bbox_inches='tight')
 # plt.tight_layout()
 
 # Display the plot
-#plt.show()
+plt.show()
 # print("tff")
 
-# Release the camera and close all windows
-cam.release()
-# cv2.destroyAllWindows()

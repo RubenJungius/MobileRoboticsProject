@@ -12,8 +12,8 @@ class kalman:
         self.y_history = []
         self.time_steps = []
         # Initialize Matplotlib plot
-        plt.ion()  # Turn on interactive mode
-        self.fig, self.ax = plt.subplots()
+        #plt.ion()  # Turn on interactive mode
+        #self.fig, self.ax = plt.subplots()
 
         self.L = 95 # distance between wheels, mm
         self.thymio_speed_to_mms =1/3.1 

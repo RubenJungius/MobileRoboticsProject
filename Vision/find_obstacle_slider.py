@@ -5,7 +5,6 @@ from tkinter import Scale, Button
 
 def tuning_done(root):
     # Close the current window
-    root.destroy()
     root.quit()
 
 ############################ red ###############################

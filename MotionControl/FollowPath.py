@@ -8,9 +8,10 @@ from tdmclient import ClientAsync, aw
 # a tuner : d_projection qui definit le regard du robot), KPv et KPteta
 
 
-KPv = 2
+KDteta = 2
 KPteta = 70
 segment_idx = 0
+old_phi = 0
 
 def distance(point1, point2):
     
@@ -23,26 +24,25 @@ def vector_compute(point1, point2):
     return vecteur
 
 
-def go_to_carrot(_position, _carrot, _teta, _Bnormal, _margin) : 
+def go_to_carrot(_position, _carrot, _teta, _margin) : 
 
     motorL = 0
     motorR = 0
-    d = distance(_position, _carrot)
-    motorL = 90                 # was 70
-    motorR = 90                 # was 70
+    
+    motorL = 90                 # forward speed
+    motorR = 90                 
 
-    ## version pas de ralentissement ; 
-    #d = distance(_position, _projection)
-    #motorL = d * KPv
-    #motorR = d * KPv
+    global old_phi
+
+    d = distance(_position, _carrot)
     vector_carrot = vector_compute(_position, _carrot)
     if d > _margin :
         phi =  math.atan2(vector_carrot[1],vector_carrot[0]) - _teta
         phi = adjust_angle(phi)
-        #phi = - phi # Inversion thanks to the fact that computation are made in an other base that images
-        motorL = motorL + phi * KPteta
-        motorR = motorR - phi * KPteta
-
+        # Apply P controller 
+        motorL = motorL + phi * KPteta + (phi-old_phi)*KDteta
+        motorR = motorR - phi * KPteta - (phi-old_phi)*KDteta
+        old_phi = phi
     return motorL, motorR
 
 
@@ -107,7 +107,7 @@ def follow_path(position, teta, path, path_has_been_done) :
         carrot = path[segment_idx] + Bnormal * sp
         
         
-        motorL, motorR = go_to_carrot(position, carrot, teta, Bnormal, margin)
+        motorL, motorR = go_to_carrot(position, carrot, teta, margin)
         return motorL, motorR, has_finished, carrot
 
 

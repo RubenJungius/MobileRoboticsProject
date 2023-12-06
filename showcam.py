@@ -27,6 +27,7 @@ while True:
     # Attendre 1 milliseconde et vérifier si une touche est enfoncée
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):  # Appuyez sur la touche 'q' pour quitter la boucle
+        cv2.imwrite("tosend.png",frame)
         break
 
 # Libérer la ressource de la caméra et fermer la fenêtre
