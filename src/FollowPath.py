@@ -28,8 +28,8 @@ def go_to_carrot(_position, _carrot, _teta, _Bnormal, _margin) :
     motorL = 0
     motorR = 0
     d = distance(_position, _carrot)
-    motorL = 70
-    motorR = 70
+    motorL = 90                 # was 70
+    motorR = 90                 # was 70
 
     ## version pas de ralentissement ; 
     #d = distance(_position, _projection)
@@ -59,19 +59,19 @@ def adjust_angle(_angle):
 
 def follow_path(position, teta, path, path_has_been_done) :
 
-
+    # Initialization of the variables
     projection = np.array([0,0])
     carrot = np.array([0,0])
     motorL = 0
     motorR = 0
-    global segment_idx
-    margin = 5 # marge de protection autour de la ligne 
-    d_projection = 30
-
-    has_finished = 0
-    limit_distance = 40
+    global segment_idx  #index of the target segment. (the segment wich the robot is following)
     
-
+    # Set parameters
+    margin = 5 # margin around the line  
+    d_projection = 30   # distance from the robot to the projection 
+    has_finished = 0    # flag to know if the robot has reached the last point
+    limit_distance = 40     # distance in pixels to know if the robot has reached the end of an segment
+    
 
     # Ckech if the path planning just came to be done 
     if path_has_been_done == 1 :
@@ -81,38 +81,33 @@ def follow_path(position, teta, path, path_has_been_done) :
     # Check if the position has reached the end segment point
     if distance(position, path[segment_idx +1]) < limit_distance : 
         segment_idx += 1
-        print('go changer de segemnt')
+        print('let s change segemnt')
         if segment_idx == len(path)-1 :
             has_finished = 1
-            print('cest finit')
+            print('End')
 
-    #print(position, path[segment_idx +1])
-
+    # Check if the Thymio has reached the end 
     if has_finished == 1:
         motorL = 0
         motorR = 0
         return motorL, motorR, has_finished, carrot
     else : 
-        # project mon point sur le segment que je suis 
+        # step(1)
         projection = position + np.array([d_projection*math.cos(teta), d_projection*math.sin(teta)])
+        # step(2)
         A = vector_compute(path[segment_idx], projection)
         B = vector_compute(path[segment_idx], path[segment_idx+1])
         Bnormal = B / np.linalg.norm(B)
-        #print(B)
-        #print('Bnormal =')
-        #print(Bnormal)
+        #step(3)
         sp = abs(np.dot(A,Bnormal))
         maxsp = distance(path[segment_idx],path[segment_idx+1])
         if sp >maxsp : 
             sp = maxsp
-        #print(sp)
-        carrot = path[segment_idx] + Bnormal * abs(sp)
-        #print(carrot)
+        #step(4)
+        carrot = path[segment_idx] + Bnormal * sp
         
-
-        #print('angle = ' + str(phi)+ str(phi1))
+        
         motorL, motorR = go_to_carrot(position, carrot, teta, Bnormal, margin)
-        #print('motorL = ' + str(motorL)+ 'motorR = ' + str(motorR))
         return motorL, motorR, has_finished, carrot
 
 

@@ -3,8 +3,8 @@ import cv2.aruco as aruco
 from skimage.filters import threshold_otsu
 import numpy as np
 import matplotlib.pyplot as plt
-
-############################ global var ###############################
+from Vision.find_obstacle_slider import*
+############################ vision var ###############################
 
 
 # ArUco dictionary
@@ -12,9 +12,9 @@ dict_id = cv2.aruco.DICT_6X6_50
 arucoDict = cv2.aruco.getPredefinedDictionary(dict_id)
 arucoParams = cv2.aruco.DetectorParameters()
 
-## A0 paper ratio --> a mesurer pour avoir les distances entre les points tu coco
+## cam settings : 720p -> enough resolution/less latency
 res_w = 720
-res_h = 1020
+res_h = 1280
 
 corner_ids = {
     1:0,
@@ -25,21 +25,16 @@ corner_ids = {
 
 # Ids
 thymio_id = 5
-
-
-
-
-
-
+end_point_id = 8
 
 ############################ function def ###############################
 
-# Given perspective transform, crops the original image
-def crop_labyrinth(img, M):
+# Given perspective transform, crops the original image (region of interest)
+def get_ROI(img, M): 
     return cv2.warpPerspective(img,M,(res_h,res_w))
 
-
-def corners_calibration(cam): #load
+#transition function to test if M is well computed
+def corners_calibration(cam): 
     while True:
         ret, frame = cam.read()
 
@@ -52,14 +47,15 @@ def corners_calibration(cam): #load
 
 
 def get_pos_aruco(detected, search_id):
+  #return the center and the 4 corners of the aruco
   (corners, ids, rejected) = detected
 
   if ids is not None:
     for i, id in enumerate(ids):
-      c = corners[i][0]
+      corner = corners[i][0]
       if id[0] == search_id:
-        center = (c[0]+c[1]+c[2]+c[3])/4
-        return (center, c)
+        center = (corner[0]+corner[1]+corner[2]+corner[3])/4
+        return (center, corner)
   return (None, None)
 
 
@@ -70,12 +66,7 @@ def find_thymio(detected):
   if center is None:
     return (None, None, None)
 
-  # c[0]        TOP LEFT
-  # c[1]        BOTTOM RIGHT
-  # c[2]        BOTTOM LEFT
-  # c[3]        TOP LEFT
-  # Compute orientation
-  # blacks squares have to be to te front of the thymio
+  #compute the direction : 
   v1 = c[1] - c[0]
   v2 = c[2] - c[3]
   dir = (v1 + v2)/2
@@ -85,7 +76,8 @@ def find_thymio(detected):
 
 
 def draw_thymio(output_image, thymio_pos):
-    c, center, angle = thymio_pos
+    #draw the position and the direction
+    corners, center, angle = thymio_pos
     if center is not None:
 
         # Draw red dot at the center
@@ -100,113 +92,102 @@ def draw_thymio(output_image, thymio_pos):
         cv2.arrowedLine(output_image, tuple(center.astype(int)), arrow_tip, (0, 0, 255), 2)
 
 
-def binarisation(im):
-    red_channel = im[:, :, 0]
-    threshold = threshold_otsu(red_channel)
-    binary = np.asarray((im > threshold).astype(float))
-    binary[binary==1] = 255
-    return binary
-
-
 def find_obstacle(image):
-    #binary = binarisation(image)
-    #gray = cv2.cvtColor(binary.astype(np.uint8), cv2.COLOR_BGR2GRAY)
-    #contours, _ = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    #obstacle_map = np.zeros_like(gray, dtype=np.uint8)
-    cv2.imwrite("ch1.png", image)
-    gray_im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite("ch15.png", gray_im)
-    #threshold = cv2.THRESH_BINARY + cv2.THRESH_OTSU
-    threshold = 100
-    threshold_value, obstacle_map = cv2.threshold(gray_im, threshold, 255, cv2.THRESH_BINARY)
-    #gray = cv2.cvtColor(binary.astype(np.uint8), cv2.COLOR_BGR2GRAY)
-    contours, _ = cv2.findContours(obstacle_map, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
-    cv2.imwrite("ch2.png", obstacle_map)
+    #use of slider to fine tune the research
+    red_binarisation(image)
+    gray = cv2.cvtColor(cv2.imread('Obstacle_map.png').astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    contours, _ = cv2.findContours(gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    obstacle_map = np.zeros_like(gray, dtype=np.uint8)
 
+    #filtering of the small elements to remove noise
     for cnt in contours:
-        # Calculate area and remove small elements
         area = cv2.contourArea(cnt)
-        if area < 20000:
+        if area > 2000:
             # Draw the filled contour on the obstacle map
             cv2.drawContours(obstacle_map, [cnt], -1, 255, thickness=cv2.FILLED)
-
-
-    cv2.imwrite("ch3.png", obstacle_map)
-    height, width = obstacle_map.shape[:2]
-
-    # size of the black spot corner 
-    width_corners = 60
-
-    # #erase tags on the corners
-    obstacle_map[:width_corners, :width_corners] = 255  # Coin supérieur gauche
-    obstacle_map[:width_corners, width - width_corners:] = 255  # Coin supérieur droit
-    obstacle_map[height - width_corners:, :width_corners] = 255  # Coin inférieur gauche
-    obstacle_map[height - width_corners:, width - width_corners:] = 255  # Coin inférieur droit
-
-    obstacle_map = cv2.bitwise_not(obstacle_map)
-    cv2.imwrite("ch4.png", obstacle_map)
+    obstacle_map = pre_processing (obstacle_map)
+    
     return obstacle_map
 
 
 def perspective_correction(image):
     detected = cv2.aruco.detectMarkers(image, arucoDict, parameters=arucoParams)
-    cs = [None]*4
+    corners = [None]*4
     for (id, idx) in corner_ids.items():
       (center, _) = get_pos_aruco(detected, id)
       if center is not None:
-        cs[idx] = center
+        corners[idx] = center
       else:
         return None
 
     # Do perspective correction
-    pts1 = np.array([cs[0], cs[1], cs[3], cs[2]])
-    pts2 = np.float32([[1020,720], [0, 720], [1020, 0], [0, 0]])
+    pts1 = np.array([corners[0], corners[1], corners[3], corners[2]])
+    pts2 = np.float32([[res_h,res_w], [0, res_w], [res_h, 0], [0, 0]])
 
     return cv2.getPerspectiveTransform(pts1,pts2)
 
 
 def aruco_fill(frame, corners):
     if corners is not None:
-        # Reshape thymio_corners to (4, 1, 2)
+        # Reshape thymio_corners to be able to use cv2
         c = np.int32(corners.reshape((4, 1, 2)))
 
-        # Fill the shape with white
+        # Fill the shape with white to avoid obstacle detection on the thymio/end_point
         cv2.fillPoly(frame, [c], color=(255, 255, 255))
         return
     
-def find_end_point(image):
-    blue_channel = image[:, :, 2]
-    low_threshold = 110  # to_tune
-    high_threshold = 150 #to_tune
-    blue_part = ((blue_channel > low_threshold) & (blue_channel < high_threshold)).astype(np.uint8) * 255
 
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    bri_channel= hsv_image[:, :, 2]
-    threshold_value = 100  # to_tune
-    _, white_part = cv2.threshold(bri_channel, threshold_value, 255, cv2.THRESH_BINARY)
-
-    binary = cv2.bitwise_xor(blue_part, white_part)
-
-    cv2.imwrite("buffer.png", binary)
-    contours, _ = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # Filter contours based on area, you may need to adjust this threshold
-    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 600]
-
-    # Check if any contours are found
-    if filtered_contours:
-        # Choose the first contour (you may need to refine the selection)
-        contour = filtered_contours[0]
-
-        # Calculate the moments of the contour
-        moments = cv2.moments(contour)
-
-        # Avoid division by zero
-        if moments['m00'] != 0:
-            # Calculate the centroid
-            centroid_x = int(moments['m10'] / moments['m00'])
-            centroid_y = int(moments['m01'] / moments['m00'])
-            return centroid_x, centroid_y
-
-    # Return None if no valid contour is found
+def find_end_point(detected):
+  (center, corners) = get_pos_aruco(detected, end_point_id)
+  if center is None:
     return None
+  return (corners,center)
+
+
+def draw_final_map(initial_pos,end_point,obstacle_map):
+  # Check if end_point and thymio_pos are not None before drawing
+  if end_point is not None:
+      # Convert tuple to integers directly
+      end_point_int = (int(end_point[0]), int(end_point[1]))
+      # Check if the end_point is within the bounds of the map
+      if 0 <= end_point_int[0] < obstacle_map.shape[1] and 0 <= end_point_int[1] < obstacle_map.shape[0]:
+          cv2.circle(obstacle_map, end_point_int, 5, (0, 0, 255), -1)
+      else:
+          print("End point is outside the visible region of the map.")
+
+  if initial_pos is not None:
+      # Convert tuple to integers directly
+      thymio_pos_int = (int(initial_pos[0]), int(initial_pos[1]))
+      cv2.circle(obstacle_map, thymio_pos_int, 5, (0, 0, 255), -1)
+  # Save the image
+  cv2.imwrite("Starting_map.png", obstacle_map)
+  return
+
+def pre_processing(edge, min_size=4000):
+    # Perform morphological closing to fill small holes
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 20))
+    closed = cv2.morphologyEx(edge, cv2.MORPH_CLOSE, kernel)
+
+    # Convert to grayscale
+    # closed = cv2.cvtColor(closed, cv2.COLOR_BGR2GRAY)
+
+    # Find connected components in the binary image
+    _, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=8)
+
+    # Filter out small objects based on their area
+    filtered = np.zeros_like(closed)
+    for label in range(1, len(stats)):
+        area = stats[label, cv2.CC_STAT_AREA]
+        if area >= min_size:
+            filtered[labels == label] = 255
+
+    # Apply the filtered mask to the original image
+    result = cv2.bitwise_and(closed, closed, mask=filtered)
+
+    # Apply opening and closing
+    kernel_opening = np.ones((10, 10), np.uint8)
+    kernel_closing = np.ones((50, 50), np.uint8)
+    
+    result = cv2.morphologyEx(result, cv2.MORPH_OPEN, kernel_opening)
+    result = cv2.morphologyEx(result, cv2.MORPH_CLOSE, kernel_closing)
+    return result

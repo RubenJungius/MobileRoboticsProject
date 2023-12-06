@@ -1,15 +1,15 @@
-from .Graph import*
-from src.Dijkstra import*
-from src.imageToGraph import*
+from GlobalNavig.Graph import*
+from GlobalNavig.Dijkstra import*
+from GlobalNavig.imageToGraph import*
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-def generateGraph(image, start, start_node, target, target_node, offset):
+def generateGraph(image, start, start_node, target, target_node, offset, threshold, area_threshold):
     
     #img_grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    polygons = find_polygons(image, threshold=20.0)
+    polygons = find_polygons(image, threshold, area_threshold)
     large_polygons = enlarge_polygons(polygons, offset, image.shape)
     
     nodes_list = {}
@@ -44,10 +44,8 @@ def draw_graph(image, connections, nodelist, path):
         plt.plot([nodelist[path[i]][0], nodelist[path[i+1]][0]],[nodelist[path[i]][1], nodelist[path[i+1]][1]], 'bo-')
     plt.show()
 
-
-
-def run_global(image, start_node, start, target_node, target, offset):
-    graph, connections, nodelist= generateGraph(image, start, start_node, target, target_node, offset)
+def run_global(image, start_node, start, target_node, target, offset, threshold, area_threshold):
+    graph, connections, nodelist= generateGraph(image, start, start_node, target, target_node, offset, threshold, area_threshold)
     previous_node, shortest_path = findPath(graph, start_node)
     path = get_shortest(previous_node, start_node, target_node)
     return path, connections, nodelist
@@ -63,24 +61,4 @@ def formatter_positions(dictionnary):
 
 
 
-'''
 
-# TestCode
-start_node = 0
-target_node = 1
-image_path = 'Obstacle_map.png'
-image = cv2.imread(image_path)
-offset = 60
-start = [100,500]
-target = [820,370]
-
-path, connections, nodelist = run_global(image, start_node, start, target_node, target, offset)
-draw_graph(image, connections, nodelist, path)
-#path_points = formatter_positions(nodelist)
-
-
-positions_triees = {indice: nodelist[indice] for indice in path}
-path_points = np.array(list(positions_triees.values()))[::-1]
-
-
-'''

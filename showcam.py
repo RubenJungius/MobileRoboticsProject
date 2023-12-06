@@ -1,9 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.filters import threshold_otsu
-
-
+# from skimage.filters import threshold_otsu
 
 # Initialiser la capture vidéo à partir de la caméra numéro 1
 cam = cv2.VideoCapture(1)
