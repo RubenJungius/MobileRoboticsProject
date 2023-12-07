@@ -83,6 +83,7 @@ while initial_pos is None or end_point is None:
     (thymio_corners, initial_pos, initial_teta) = thymio_init
     (end_point_corners,end_point)=find_end_point(detected)
 
+
 #fill the thymio aruco with white -> thymio+end_point
 aruco_fill(map, thymio_corners)
 aruco_fill(map, end_point_corners)
@@ -146,12 +147,26 @@ start_time = time.time()
 
 while True:
 
+    aw(node.wait_for_variables({"button.forward"}))
+    #prox_meas = node.button.foreward == 1 
+    if node.v.button.forward == 1  :
+        aw(node.set_variables(Msg_motors(0, 0)))
+        while True :
+            if cv2.waitKey(1) & 0xFF == ord('k'):
+                ret, frame = cam.read()
+                roi = get_ROI(frame, M)
+                roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #gray transform for aruco detection
+                detected = cv2.aruco.detectMarkers(roi_gray, arucoDict, parameters=arucoParams)
+                thymio_pos = find_thymio(detected)
+                do_path = 1
+                break
     
 
     ###### PATH PLANNING ######
     # Perform the path finding algorythm if the flag do_path is 1
     if do_path == 1 :
-        path, connections, nodelist = run_global( obstacle_map, start_node, initial_pos.tolist(), target_node, target.tolist(), offset, 20, 40) #, point_threshold, area_threshold)
+        
+        path, connections, nodelist = run_global( obstacle_map, start_node, thymio_pos[1].tolist(), target_node, target.tolist(), offset, 20, 40) #, point_threshold, area_threshold)
         positions_triees = {indice: nodelist[indice] for indice in path}        # nodelist gives all the nodes (directory of nodes)
         pathpoints = np.array(list(positions_triees.values()))[::-1]            # get a list of points coordinates from directorie 'node' and 'path' indexs
         cv2.destroyAllWindows()
