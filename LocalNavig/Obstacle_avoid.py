@@ -13,13 +13,14 @@ from tdmclient import ClientAsync, aw
 #faire une fonction qui fait la local avoidance ! 
 
 def LocalAvoidance(prox) : 
-    
+    # Neural Network Weights 
     NNW = np.array([[2, 3, -4, -3, -2],[-2, -3, -4, 3, 2]])
     threshold = 500
-    Gain = 0.01
+    Gain = 0.01         # Gain to diminue the intensity of the local avoidance intensity
     obstacle_detected = False
     prox_for = np.zeros(5)
 
+    # Check if there are close enough obstacles
     for i in range(5):
         prox_for[i] = prox[i]
         if(prox[i] > threshold) :
@@ -36,7 +37,7 @@ def LocalAvoidance(prox) :
 
 
 
-
+# Create the message to send speeds motor to the Thymio
 def Msg_motors(_speedL, _speedR) : 
 
     msg = {

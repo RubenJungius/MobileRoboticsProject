@@ -12,7 +12,7 @@ from MotionControl.FollowPath import*
 from LocalNavig.Obstacle_avoid import*
 
 from Vision.vison_functions import*
-
+  
 from src.globalNavigation import*
 
 from Filter.kalman import kalman
@@ -149,13 +149,13 @@ while True:
     
 
     ###### PATH PLANNING ######
-
+    # Perform the path finding algorythm if the flag do_path is 1
     if do_path == 1 :
-        
         path, connections, nodelist = run_global( obstacle_map, start_node, initial_pos, target_node, target, offset) #, point_threshold, area_threshold)
         positions_triees = {indice: nodelist[indice] for indice in path}        # nodelist gives all the nodes (directory of nodes)
         pathpoints = np.array(list(positions_triees.values()))[::-1]            # get a list of points coordinates from directorie 'node' and 'path' indexs
         cv2.destroyAllWindows()
+        # Show map with all the posible paths and the chosen one 
         draw_graph(obstacle_map, connections, nodelist, path)
         print(pathpoints)
 
@@ -219,7 +219,7 @@ while True:
 
         
 
-    ###### MATION CONTROL ######
+    ###### MOTION CONTROL ######
 
     # Bloc to compute the motors speed from obstacles
     aw(node.wait_for_variables({"prox.horizontal"}))
@@ -245,11 +245,11 @@ while True:
         break
 
 
-    ####### SHOW MAP #####
+    ##### SHOW MAP #####
     # Draw path 
     for point in pathpoints:
         cv2.circle(roi, tuple(np.array(point).astype(int)), 5, (0, 255, 0), -1)
-    #draw carrot
+    # Draw carrot (short term target of the thymio)
     cv2.circle(roi, tuple(np.array(carrot).astype(int)), 5, (255, 0, 0), -1)
     # Draw Thymio
     draw_thymio(roi, thymio_pos)                                                                           
@@ -309,11 +309,11 @@ for i in range (len(time_evol)) :
         vision_theta_evol.append(vision_i[2]/pixel_to_mm)
 
 
-plt.close('all')
+#plt.close('all')
 
 # Clear all existing plots and graphics
-plt.clf()
-plt.close()
+#plt.clf()
+#plt.close()
 
 print('length time_evol= ', len(time_evol))
 print('length kalman_evol= ', len(kalman_evol))
