@@ -198,33 +198,33 @@ while True:
 
 
     ###### KALMAN FILTER ######
-    print("--------------------------------------")
-    # print("thymio_pos_camera: ", thymio_pos)
+
     if (position is not None) and (teta is not None):
         camera_pose = np.array([position[0],position[1],teta])
     else:
         camera_pose = None
 
-    print("passed_thymio_pose_camera: ", camera_pose)
+    # get motors speed 
     aw(node.wait_for_variables({"motor.left.speed","motor.right.speed"}))
     l_speed = node.v.motor.left.speed
     r_speed = node.v.motor.right.speed
+    # Get time bitween 2 call of kalman filter 
     prev_time = curr_time
     curr_time = time.time()
     delta_time = curr_time - prev_time
-    print("kalman_class.mean before call =", kalman_class.mean)
+    
     # kalman_pose , kalman_covariance , x_predicted , y_predicted , theta_predicted = kalman_class.kalman_update_pose (camera_pose,motorL,motorR, delta_time)        # "pose" contains position and orientation
     x_predicted , y_predicted , theta_predicted = kalman_class.kalman_update_pose (camera_pose,motorL,motorR, delta_time)        # "pose" contains position and orientation
     kalman_pose = copy.copy(kalman_class.mean)
+    # Conversion mm to pixels
     kalman_pose [0]= kalman_pose [0]* mm_to_pixel
     kalman_pose [1]= kalman_pose [1]* mm_to_pixel
     kalman_covariance = copy.copy(kalman_class.covar)
     x_predicted_evol.append(x_predicted)
     y_predicted_evol.append(y_predicted)
     theta_predict_evol.append(theta_predicted)
-    print("kalman pose returned (pix): ", kalman_pose)
-    print("kalman_class.mean after call =", kalman_class.mean)
-    #plot
+
+    # Update plots 
     kalman_evol.append(kalman_pose)
     vision_evol.append(camera_pose)
     current_timestep = time.time()
@@ -232,8 +232,7 @@ while True:
 
     # thymio_pos = np.array([c , kalman_pose[0], kalman_pose[1], kalman_pose[2]])     # remerge into the thymio_pos variable to work with the rest of the code
     thymio_pos = (thymio_pos[0], np.array([kalman_pose[0],kalman_pose[1]]), kalman_pose[2])     
-    # print("final thymio pos: ", thymio_pos)
-    # print("thymio_pos2: ", thymio_pos)
+
 
 
         
@@ -289,15 +288,7 @@ cam.release()
 cv2.destroyAllWindows()
 
 
-# kalman_mean_history , kalman_y_history, kalman_timesteps = kalman_class.kalman_plot()
-# plt.plot(kalman_timesteps , kalman_mean_history)
-
-#plot:
-# print("kalman_evol", kalman_evol)
-# print("y_evol: ", vision_evol)
-# print("timeevol: ", time_evol )
-# print("kalman_evol[5]= ", kalman_evol[5])
-# print("y_evol[5]=", vision_evol[5])
+###### Show Kalman data ####### 
 
 kalman_x_evol=[]
 kalman_y_evol=[]
@@ -328,20 +319,6 @@ for i in range (len(time_evol)) :
         vision_theta_evol.append(vision_i[2]/pixel_to_mm)
 
 
-#plt.close('all')
-
-# Clear all existing plots and graphics
-#plt.clf()
-#plt.close()
-
-print('length time_evol= ', len(time_evol))
-print('length kalman_evol= ', len(kalman_evol))
-
-
-
-#plt.figure()
-print("t1")
-
 fig, axs = plt.subplots(2, 2, figsize=(15, 15))
 
 # Plot the signals on each subplot
@@ -370,10 +347,7 @@ axs[1,1].legend()
 
 plt.savefig('kalman_camera_evolution.png', bbox_inches='tight')
 
-# Adjust layout to prevent subplot overlap
-# plt.tight_layout()
-
 # Display the plot
 plt.show()
-# print("tff")
+
 
