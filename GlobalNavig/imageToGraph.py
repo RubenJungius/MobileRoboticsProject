@@ -40,14 +40,17 @@ def enlarge_polygons(polygons, offset, img_shape):
         count += 1
     return new_polygons
 
-def find_polygons(img, threshold, area_threshold):
-    # Appliquer un flou pour réduire le bruit et détecter les contours
+def find_contours(img):
     img = cv2.GaussianBlur(img, (5, 5), 0)
     img = cv2.Canny(img, 50, 150)
 
     # Trouver les contours dans l'image
     contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
+    return contours
+
+def find_polygons(img, threshold, area_threshold):
+    # Appliquer un flou pour réduire le bruit et détecter les contours
+    contours = find_contours(img)
     # Initialiser une liste pour stocker les sommets et les classifications
     polygons = {}
     count = 0
@@ -85,14 +88,14 @@ def distance(a,b):
 def find_connections(nodelist, polygons, maxx, maxy): # polygons are enlarged polygons
     poly_connections = []
     connections = []
-    print(polygons)
+    # print(polygons)
     for i in polygons:
         for j in polygons[i]:
             try:
                 poly_connections.append([j,j+1,distance(polygons[i][j], polygons[i][j+1])])
             except:
                 poly_connections.append([j,j-len(polygons[i])+1,distance(polygons[i][j], polygons[i][j-len(polygons[i])+1])])
-    print(nodelist)
+    # print(nodelist)
     for i in nodelist:
         for j in nodelist:
             if i == j: 
@@ -127,3 +130,44 @@ def intersect(A,B,C,D):
     if A == C or A == D or B == C or B == D: # If they share point, they intersect but the connection is still valid
         return False
     return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+
+def draw_enlarged(polygons, image_size):
+    # Create a black background
+    # print(polygons)
+    height, width = image_size[0], image_size[1]
+    enlarged_img = np.zeros((height, width), dtype=np.uint8)
+
+    # Draw white contours on the black background
+    for contour_id, contour_points in polygons.items():
+        # Convert the points to NumPy array
+        contour_array = np.array([point for point_id, point in contour_points.items()])
+
+        # Fill the polygon with white color
+        cv2.fillPoly(enlarged_img, [contour_array.astype(int)], color=(255))
+
+    return enlarged_img
+
+def find_enlarged_polygons(img, threshold, area_threshold):
+    contours = find_contours(img)
+    # Initialiser une liste pour stocker les sommets et les classifications
+    polygons = {}
+    poly_count =0
+    node_count = 2
+    
+    # Parcourir tous les contours
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area < area_threshold: # Remove artefact contours that are too small
+            continue
+        
+        # Approximer le contour par une forme polygonale
+        epsilon = 0.01 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+    
+        polygons[poly_count]={}
+        for i in approx:
+            for j in i:
+                polygons[poly_count][node_count]=j.tolist()
+                node_count += 1
+        poly_count += 1
+    return polygons

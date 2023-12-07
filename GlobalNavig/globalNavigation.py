@@ -12,6 +12,19 @@ def generateGraph(image, start, start_node, target, target_node, offset, thresho
     polygons = find_polygons(image, threshold, area_threshold)
     large_polygons = enlarge_polygons(polygons, offset, image.shape)
     
+###
+    enlarged_img = draw_enlarged(large_polygons, image.shape)
+    large_polygons = find_enlarged_polygons(enlarged_img, threshold, area_threshold)
+    '''
+    print(large_polygons)
+    plt.figure()
+    plt.imshow(enlarged_img)
+    for i in large_polygons:
+        for j in large_polygons[i]:
+            plt.scatter(large_polygons[i][j][0], large_polygons[i][j][1])
+    plt.show()
+    '''
+###
     nodes_list = {}
     nodes_list[start_node]=start
     nodes_list[target_node]=target
