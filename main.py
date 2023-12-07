@@ -108,7 +108,7 @@ print("\nThymio connected success")
 # Path planning var init
 start_node = 0
 target_node = 1
-offset = 123        # unlarg obstacles
+offset = 95        # unlarg obstacles
 target = end_point  # define the target
 
 # Motion Control var init
@@ -158,6 +158,10 @@ while True:
                 roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #gray transform for aruco detection
                 detected = cv2.aruco.detectMarkers(roi_gray, arucoDict, parameters=arucoParams)
                 thymio_pos = find_thymio(detected)
+                print(thymio_pos)
+                if thymio_pos[1] is None:
+                    print("Thymio not on map")
+                    continue
                 do_path = 1
                 break
     

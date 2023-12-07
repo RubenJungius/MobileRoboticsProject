@@ -165,14 +165,14 @@ def draw_final_map(initial_pos,end_point,obstacle_map):
 
 def pre_processing(edge, min_size=4000):
     # Perform morphological closing to fill small holes
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 20))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10))
     closed = cv2.morphologyEx(edge, cv2.MORPH_CLOSE, kernel)
 
     # Convert to grayscale
     # closed = cv2.cvtColor(closed, cv2.COLOR_BGR2GRAY)
 
     # Find connected components in the binary image
-    _, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=8)
+    _, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=4)
 
     # Filter out small objects based on their area
     filtered = np.zeros_like(closed)
@@ -186,7 +186,7 @@ def pre_processing(edge, min_size=4000):
 
     # Apply opening and closing
     kernel_opening = np.ones((10, 10), np.uint8)
-    kernel_closing = np.ones((50, 50), np.uint8)
+    kernel_closing = np.ones((10, 10), np.uint8)
     
     result = cv2.morphologyEx(result, cv2.MORPH_OPEN, kernel_opening)
     result = cv2.morphologyEx(result, cv2.MORPH_CLOSE, kernel_closing)

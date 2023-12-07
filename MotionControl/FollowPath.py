@@ -68,7 +68,7 @@ def follow_path(position, teta, path, path_has_been_done) :
     
     # Set parameters
     margin = 5 # margin around the line  
-    d_projection = 80   # distance from the robot to the projection 
+    d_projection = 120   # distance from the robot to the projection 
     has_finished = 0    # flag to know if the robot has reached the last point
     limit_distance = 40     # distance in pixels to know if the robot has reached the end of an segment
     

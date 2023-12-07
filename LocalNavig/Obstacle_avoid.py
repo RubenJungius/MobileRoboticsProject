@@ -16,7 +16,7 @@ def LocalAvoidance(prox) :
     # Neural Network Weights 
     NNW = np.array([[2, 3, -4, -3, -2],[-2, -3, -4, 3, 2]])
     threshold = 500
-    Gain = 0.01         # Gain to diminue the intensity of the local avoidance intensity
+    Gain = 0.03         # Gain to diminue the intensity of the local avoidance intensity
     obstacle_detected = False
     prox_for = np.zeros(5)
 
