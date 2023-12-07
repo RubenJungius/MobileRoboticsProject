@@ -8,8 +8,8 @@ from tdmclient import ClientAsync, aw
 # a tuner : d_projection qui definit le regard du robot), KPv et KPteta
 
 
-KDteta = 2
-KPteta = 70
+KDteta = 15
+KPteta = 80
 segment_idx = 0
 old_phi = 0
 
@@ -68,7 +68,7 @@ def follow_path(position, teta, path, path_has_been_done) :
     
     # Set parameters
     margin = 5 # margin around the line  
-    d_projection = 30   # distance from the robot to the projection 
+    d_projection = 80   # distance from the robot to the projection 
     has_finished = 0    # flag to know if the robot has reached the last point
     limit_distance = 40     # distance in pixels to know if the robot has reached the end of an segment
     

@@ -13,7 +13,7 @@ from LocalNavig.Obstacle_avoid import*
 
 from Vision.vison_functions import*
   
-from src.globalNavigation import*
+from GlobalNavig.globalNavigation import*
 
 from Filter.kalman import kalman
 
@@ -151,7 +151,7 @@ while True:
     ###### PATH PLANNING ######
     # Perform the path finding algorythm if the flag do_path is 1
     if do_path == 1 :
-        path, connections, nodelist = run_global( obstacle_map, start_node, initial_pos, target_node, target, offset) #, point_threshold, area_threshold)
+        path, connections, nodelist = run_global( obstacle_map, start_node, initial_pos.tolist(), target_node, target.tolist(), offset, 20, 40) #, point_threshold, area_threshold)
         positions_triees = {indice: nodelist[indice] for indice in path}        # nodelist gives all the nodes (directory of nodes)
         pathpoints = np.array(list(positions_triees.values()))[::-1]            # get a list of points coordinates from directorie 'node' and 'path' indexs
         cv2.destroyAllWindows()
@@ -320,7 +320,7 @@ print('length kalman_evol= ', len(kalman_evol))
 
 
 
-plt.figure()
+#plt.figure()
 print("t1")
 
 fig, axs = plt.subplots(2, 2, figsize=(15, 15))

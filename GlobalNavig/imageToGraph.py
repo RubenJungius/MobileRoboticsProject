@@ -85,13 +85,14 @@ def distance(a,b):
 def find_connections(nodelist, polygons, maxx, maxy): # polygons are enlarged polygons
     poly_connections = []
     connections = []
+    print(polygons)
     for i in polygons:
         for j in polygons[i]:
             try:
                 poly_connections.append([j,j+1,distance(polygons[i][j], polygons[i][j+1])])
             except:
                 poly_connections.append([j,j-len(polygons[i])+1,distance(polygons[i][j], polygons[i][j-len(polygons[i])+1])])
-    
+    print(nodelist)
     for i in nodelist:
         for j in nodelist:
             if i == j: 
