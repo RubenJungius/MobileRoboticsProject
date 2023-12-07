@@ -87,6 +87,8 @@ while initial_pos is None or end_point is None:
 #fill the thymio aruco with white -> thymio+end_point
 aruco_fill(map, thymio_corners)
 aruco_fill(map, end_point_corners)
+cv2.imwrite("Aruco_filled.png",map)
+
 
 #find the obstacle by thresholding
 obstacle_map = find_obstacle(map)
@@ -158,7 +160,6 @@ while True:
                 roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #gray transform for aruco detection
                 detected = cv2.aruco.detectMarkers(roi_gray, arucoDict, parameters=arucoParams)
                 thymio_pos = find_thymio(detected)
-                print(thymio_pos)
                 if thymio_pos[1] is None:
                     print("Thymio not on map")
                     continue
@@ -170,13 +171,12 @@ while True:
     # Perform the path finding algorythm if the flag do_path is 1
     if do_path == 1 :
         
-        path, connections, nodelist = run_global( obstacle_map, start_node, thymio_pos[1].tolist(), target_node, target.tolist(), offset, 20, 40) #, point_threshold, area_threshold)
+        path, connections, nodelist = run_global( obstacle_map, start_node, thymio_pos[1].tolist(), target_node, target.tolist(), offset, 20) #, point_threshold, area_threshold)
         positions_triees = {indice: nodelist[indice] for indice in path}        # nodelist gives all the nodes (directory of nodes)
         pathpoints = np.array(list(positions_triees.values()))[::-1]            # get a list of points coordinates from directorie 'node' and 'path' indexs
         cv2.destroyAllWindows()
         # Show map with all the posible paths and the chosen one 
         draw_graph(obstacle_map, connections, nodelist, path)
-        print(pathpoints)
 
         do_path = 0
         path_has_been_done = 1
